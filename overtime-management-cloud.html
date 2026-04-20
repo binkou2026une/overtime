@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>残業管理システム | DIRECT CHINA株式会社</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a2e'/%3E%3Ctext x='16' y='23' font-family='Noto Sans JP%2C sans-serif' font-size='18' font-weight='700' fill='%23e8374f' text-anchor='middle'%3E残%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#C8102E; --red-light:#e8374f; --red-dim:rgba(200,16,46,0.08);
+  --gold:#B8960C; --gold-light:#e6c84a; --gold-dim:rgba(184,150,12,0.08);
+  --green:#2a7a3b; --green-dim:rgba(42,122,59,0.1);
+  --orange:#c85c10; --orange-dim:rgba(200,92,16,0.1);
+  --ink:#1a1a2e; --ink-mid:#3a3a5c; --ink-soft:#6b6b8a;
+  --paper:#f7f5f0; --paper-warm:#ede9e0;
+  --white:#fff; --border:rgba(26,26,46,0.12);
+  --shadow:0 4px 24px rgba(26,26,46,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+
+header{background:var(--ink);color:#fff;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:200;border-bottom:3px solid var(--red)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:36px;height:36px;background:var(--red);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:#fff}
+.logo-text{font-size:13px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.9)}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase}
+.header-badge{background:var(--red-dim);border:1px solid rgba(200,16,46,.3);color:var(--red-light);padding:4px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace}
+.sync-status{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500;transition:all .3s}
+.sync-status.syncing{background:rgba(184,150,12,.15);color:var(--gold);border:1px solid rgba(184,150,12,.3)}
+.sync-status.synced {background:rgba(42,122,59,.12);color:var(--green);border:1px solid rgba(42,122,59,.3)}
+.sync-status.error  {background:var(--red-dim);color:var(--red);border:1px solid rgba(200,16,46,.3)}
+
+.app{display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 64px)}
+nav{background:var(--white);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
+.nav-section-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft);padding:0 20px 8px;margin-top:16px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--ink-mid);border-left:3px solid transparent;margin:1px 0}
+.nav-item:hover{background:var(--paper);color:var(--ink)}
+.nav-item.active{background:var(--red-dim);color:var(--red);border-left-color:var(--red);font-weight:500}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+
+main{padding:32px;overflow-y:auto}
+.page{display:none}.page.active{display:block}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.page-subtitle{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.month-selector{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+.month-btn{background:none;border:none;cursor:pointer;color:var(--ink-mid);font-size:16px;padding:0 4px;transition:color .15s}
+.month-btn:hover{color:var(--red)}
+.month-display{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--ink);min-width:80px;text-align:center}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.03em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:3px;height:16px;background:var(--red);border-radius:2px}
+.card-actions{display:flex;gap:8px;margin-left:auto}
+
+.alert-banner{border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;display:flex;align-items:flex-start;gap:10px;border:1px solid}
+.alert-warn{background:var(--orange-dim);border-color:rgba(200,92,16,.3);color:var(--orange)}
+.alert-danger{background:var(--red-dim);border-color:rgba(200,16,46,.3);color:var(--red)}
+.alert-ok{background:var(--green-dim);border-color:rgba(42,122,59,.3);color:var(--green)}
+.alert-icon{font-size:16px;line-height:1.4}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-group.half{grid-column:span 2}
+label{font-size:11px;font-weight:500;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.required::after{content:' *';color:var(--red)}
+input,select,textarea{font-family:'Noto Sans JP',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--paper);color:var(--ink);transition:all .15s;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--red);background:var(--white);box-shadow:0 0 0 3px rgba(200,16,46,.08)}
+input[type=time]{font-family:'DM Mono',monospace}
+textarea{resize:vertical;min-height:80px}
+.time-range{display:flex;align-items:center;gap:8px}
+.time-range input{flex:1}
+.time-sep{color:var(--ink-soft);font-size:18px;line-height:1;white-space:nowrap}
+.calc-result{background:var(--red-dim);border:1px solid rgba(200,16,46,.2);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--red);min-width:80px;text-align:center;white-space:nowrap}
+.calc-result.gold{background:var(--gold-dim);border-color:rgba(184,150,12,.2);color:var(--gold)}
+.section-divider{border:none;border-top:1px dashed var(--border);margin:20px 0}
+.toggle-section{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.toggle-label{font-size:13px;font-weight:500;color:var(--ink-mid);cursor:pointer}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer}
+.toggle input{display:none}
+.toggle-track{position:absolute;inset:0;background:var(--paper-warm);border:1px solid var(--border);border-radius:11px;transition:all .2s}
+.toggle input:checked+.toggle-track{background:var(--red);border-color:var(--red)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:var(--ink-soft);border-radius:50%;transition:all .2s}
+.toggle input:checked~.toggle-thumb{left:21px;background:#fff}
+.collapsible{overflow:hidden;transition:max-height .35s ease;max-height:0}
+.collapsible.open{max-height:600px}
+
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--red-light);transform:translateY(-1px);box-shadow:0 4px 12px rgba(200,16,46,.3)}
+.btn-secondary{background:var(--paper-warm);color:var(--ink-mid);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--paper)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover:not(:disabled){background:var(--gold-light);color:var(--ink)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{opacity:.9}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-icon{background:none;border:none;cursor:pointer;font-size:15px;padding:4px 8px;border-radius:4px;transition:all .15s;color:var(--ink-soft)}
+.btn-icon:hover{color:var(--red);background:var(--red-dim)}
+.btn-icon.edit:hover{color:var(--gold);background:var(--gold-dim)}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--paper);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);border-bottom:2px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--paper)}
+tbody td{padding:12px 14px;color:var(--ink-mid);vertical-align:middle}
+.td-mono{font-family:'DM Mono',monospace;font-size:13px}
+.td-date{font-family:'DM Mono',monospace;font-weight:500;color:var(--ink)}
+
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-ot{background:rgba(200,16,46,.1);color:var(--red)}
+.badge-comp{background:rgba(184,150,12,.1);color:var(--gold)}
+.badge-comp-sa{background:rgba(42,122,59,.1);color:var(--green)}
+.badge-net-pos{background:rgba(200,16,46,.08);color:var(--red);font-family:'DM Mono',monospace}
+.badge-net-zero{background:rgba(42,122,59,.1);color:var(--green);font-family:'DM Mono',monospace}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px}
+.stat-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--ink);line-height:1}
+.stat-unit{font-size:14px;color:var(--ink-soft);margin-left:2px}
+.stat-card.accent{border-color:rgba(200,16,46,.3)}.stat-card.accent .stat-value{color:var(--red)}
+.stat-card.gold{border-color:rgba(184,150,12,.3)}.stat-card.gold .stat-value{color:var(--gold)}
+.stat-card.green{border-color:rgba(42,122,59,.3)}.stat-card.green .stat-value{color:var(--green)}
+
+.ota-wrap{display:flex;flex-direction:column;gap:10px}
+.ota-row{display:grid;grid-template-columns:110px 1fr 80px 90px;align-items:center;gap:12px}
+.ota-name{font-size:13px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ota-track{height:22px;background:var(--paper-warm);border-radius:6px;overflow:hidden;position:relative}
+.ota-fill{height:100%;border-radius:6px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.ota-fill.ok{background:var(--green)}.ota-fill.warn{background:var(--gold-light)}.ota-fill.danger{background:var(--red)}
+.ota-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-mid);text-align:right}
+.ota-status{font-size:11px;font-weight:600;text-align:center;padding:2px 8px;border-radius:20px}
+.ota-status.ok{background:var(--green-dim);color:var(--green)}
+.ota-status.warn{background:var(--gold-dim);color:var(--gold)}
+.ota-status.danger{background:var(--red-dim);color:var(--red)}
+
+.bar-chart{display:flex;flex-direction:column;gap:10px}
+.bar-row{display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:12px}
+.bar-label{font-size:12px;color:var(--ink-mid);text-align:right}
+.bar-track{height:20px;background:var(--paper-warm);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.bar-ot{background:var(--red)}.bar-comp{background:var(--gold-light)}
+.bar-value{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-mid)}
+.bar-legend{display:flex;gap:16px;margin-bottom:16px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-mid)}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+
+.person-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.person-tab{padding:8px 18px;border-radius:8px 8px 0 0;background:none;border:1px solid transparent;border-bottom:none;font-family:'Noto Sans JP',sans-serif;font-size:13px;cursor:pointer;color:var(--ink-soft);transition:all .15s;margin-bottom:-1px}
+.person-tab:hover{color:var(--ink);background:var(--paper)}
+.person-tab.active{background:var(--white);color:var(--red);border-color:var(--border);font-weight:500}
+
+.emp-select-wrap{display:flex;align-items:center;gap:16px;background:var(--paper-warm);border-radius:10px;padding:16px 20px;margin-bottom:24px;border:1px solid var(--border);flex-wrap:wrap}
+.emp-select-wrap label{font-size:12px;font-weight:700;color:var(--ink-soft);white-space:nowrap;text-transform:uppercase;letter-spacing:.08em}
+.emp-select-wrap select{background:var(--white);flex:1;max-width:240px;width:auto}
+
+.notice{background:rgba(184,150,12,.08);border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;color:var(--ink-mid);margin-bottom:20px;line-height:1.6}
+
+/* セットアップ画面 */
+.setup-screen{position:fixed;inset:0;background:var(--ink);z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;padding:32px}
+.setup-screen.hidden{display:none}
+.setup-box{background:var(--white);border-radius:16px;padding:40px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.setup-title{font-size:20px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.setup-sub{font-size:13px;color:var(--ink-soft);margin-bottom:28px;line-height:1.7}
+.setup-input-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.setup-input-wrap label{font-size:11px;font-weight:700;color:var(--ink-soft);letter-spacing:.08em;text-transform:uppercase}
+.setup-input-wrap input{font-size:13px;font-family:'DM Mono',monospace}
+.setup-hint{font-size:11px;color:var(--ink-soft);line-height:1.6;background:var(--paper);padding:10px 14px;border-radius:8px;border-left:3px solid var(--gold)}
+.setup-error{font-size:12px;color:var(--red);margin-top:8px;display:none}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(26,26,46,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--white);border-radius:16px;padding:32px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(26,26,46,.2)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:10px}
+.modal-title::before{content:'';width:4px;height:20px;background:var(--gold);border-radius:2px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+
+.ota-limit-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-mid)}
+.ota-limit-row input{width:80px;flex:none}
+.empty-state{text-align:center;padding:48px 20px;color:var(--ink-soft)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px}
+.empty-state p{font-size:13px}
+
+/* ローディングオーバーレイ */
+.loading-overlay{position:fixed;inset:0;background:rgba(26,26,46,.35);z-index:800;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.loading-overlay.hidden{display:none}
+.loading-box{background:var(--white);border-radius:12px;padding:24px 32px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 40px rgba(26,26,46,.15)}
+.spinner{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .app{grid-template-columns:1fr}
+  nav{display:none}
+  main{padding:20px 16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .form-group.half{grid-column:span 1}
+  .ota-row{grid-template-columns:80px 1fr 60px}
+  .ota-status{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ── セットアップ画面（初回のみ） ── -->
+<div id="setupScreen" class="setup-screen">
+  <div class="setup-box">
+    <div class="setup-title">🔗 クラウド接続設定</div>
+    <div class="setup-sub">
+      Google Apps ScriptのデプロイURLを入力してください。<br>
+      入力後は同じブラウザで自動的に保存されます（再入力不要）。
+    </div>
+    <div class="setup-input-wrap">
+      <label>GAS デプロイ URL</label>
+      <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfy.../exec">
+    </div>
+    <div class="setup-hint">
+      💡 GASデプロイURLの取得方法は、配布した手順書「<strong>STEP 2</strong>」をご確認ください。
+    </div>
+    <div id="setupError" class="setup-error">URLが正しくないか、接続に失敗しました。手順書を確認して再度お試しください。</div>
+    <div class="form-actions" style="border:none;padding:0;margin-top:20px">
+      <button class="btn btn-primary" onclick="connectGAS()" id="connectBtn">接続して開始</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ローディング ── -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box"><div class="spinner"></div><span style="font-size:13px;color:var(--ink-mid)">サーバーと通信中…</span></div>
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">DC</div>
+    <div>
+      <div class="logo-text">DIRECT CHINA株式会社</div>
+      <div class="logo-sub">Overtime Management System</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="syncStatus" class="sync-status synced">● 同期済み</span>
+    <div id="headerMonth" class="header-badge">—</div>
+  </div>
+</header>
+
+<div class="app">
+<nav>
+  <div class="nav-section-label">入力</div>
+  <div class="nav-item active" onclick="showPage('input',this)"><span class="nav-icon">✏️</span>残業入力</div>
+  <div class="nav-item" onclick="showPage('comp-input',this)"><span class="nav-icon">🔄</span>振替入力</div>
+  <div class="nav-section-label">集計</div>
+  <div class="nav-item" onclick="showPage('summary-all',this)"><span class="nav-icon">📊</span>全体集計</div>
+  <div class="nav-item" onclick="showPage('summary-person',this)"><span class="nav-icon">👤</span>個人集計</div>
+  <div class="nav-section-label">管理</div>
+  <div class="nav-item" onclick="showPage('employees',this)"><span class="nav-icon">⚙️</span>社員管理</div>
+  <div class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">📋</span>36協定設定</div>
+</nav>
+
+<main>
+
+<!-- 残業入力 -->
+<div id="page-input" class="page active">
+  <div class="page-header">
+    <div><div class="page-title">残業入力</div><div class="page-subtitle">残業記録を登録します</div></div>
+    <div class="month-selector">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-display" id="md1">—</div>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="notice">💡 集計期間：毎月1日〜月末締め　／　残業時間から振替取得を差し引いた値が「実質残業時間」として集計されます。</div>
+  <div id="otAlertBanner"></div>
+  <div class="emp-select-wrap">
+    <label>社員選択</label>
+    <select id="inputEmp" onchange="onInputEmpChange()"><option value="">-- 社員を選択 --</option></select>
+  </div>
+  <div class="card">
+    <div class="card-title">新規登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="required">残業日</label><input type="date" id="f_date"></div>
+      <div class="form-group"><label>残業種別</label>
+        <select id="f_type"><option>通常残業</option><option>早朝出勤</option><option>休日出勤</option><option>接待交際</option><option>出張</option><option>その他</option></select>
+      </div>
+      <div class="form-group half"><label class="required">残業時間帯</label>
+        <div class="time-range">
+          <input type="time" id="f_os" oninput="calcOT()"><span class="time-sep">→</span>
+          <input type="time" id="f_oe" oninput="calcOT()">
+          <div class="calc-result" id="f_or">—</div>
+        </div>
+      </div>
+      <div class="form-group full"><label class="required">残業理由</label><textarea id="f_reason" placeholder="例）〇〇案件の納期対応、通関書類の緊急修正 など"></textarea></div>
+    </div>
+    <hr class="section-divider">
+    <div class="toggle-section">
+      <label class="toggle"><input type="checkbox" id="tComp" onchange="toggleComp()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      <span class="toggle-label">振替取得を同時に登録する</span>
+    </div>
+    <div class="collapsible" id="compSec">
+      <div class="form-grid">
+        <div class="form-group"><label>振替取得日</label><input type="date" id="f_cd"></div>
+        <div class="form-group half"><label>振替取得時間帯</label>
+          <div class="time-range">
+            <input type="time" id="f_cs" oninput="calcComp()"><span class="time-sep">→</span>
+            <input type="time" id="f_ce" oninput="calcComp()">
+            <div class="calc-result gold" id="f_cr">—</div>
+          </div>
+        </div>
+        <div class="form-group full"><label>振替備考</label><input type="text" id="f_creason" placeholder="例）〇〇残業の代替取得"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="clearOTForm()">クリア</button>
+      <button class="btn btn-primary" id="btnSaveOT" onclick="saveOTRecord()">登録する</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">当月の登録一覧
+      <div class="card-actions"><button class="btn btn-sm btn-gold" onclick="exportCSV('ot')">⬇ CSVエクスポート</button></div>
+    </div>
+    <div class="table-wrap" id="otListWrap"><div class="empty-state"><div class="empty-icon">📋</div><p>社員を選択すると一覧が表示されます。</p></div></div>
+  </div>
+</div>
+
+<!-- 振替入力 -->
+<div id="page-comp-input" class="page">
+  <div class="page-header">
+    <div><div class="page-title">振替入力</div><div class="page-subtitle">振替取得のみを個別に登録します</div></div>
+    <div class="month-selector">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-display" id="md2">—</div>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="notice">💡 この画面では残業とは独立して振替取得のみを登録できます。登録された振替時間は集計に自動反映されます。</div>
+  <div class="emp-select-wrap">
+    <label>社員選択</label>
+    <select id="compInputEmp" onchange="onCompInputEmpChange()"><option value="">-- 社員を選択 --</option></select>
+  </div>
+  <div class="card">
+    <div class="card-title">振替取得 新規登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="required">振替取得日</label><input type="date" id="cf_date"></div>
+      <div class="form-group half"><label class="required">振替取得時間帯</label>
+        <div class="time-range">
+          <input type="time" id="cf_start" oninput="calcCompForm()"><span class="time-sep">→</span>
+          <input type="time" id="cf_end" oninput="calcCompForm()">
+          <div class="calc-result gold" id="cf_result">—</div>
+        </div>
+      </div>
+      <div class="form-group full"><label>振替理由・備考</label><input type="text" id="cf_reason" placeholder="例）〇〇残業の代替、業務都合による振替 など"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="clearCompForm()">クリア</button>
+      <button class="btn btn-gold" id="btnSaveComp" onclick="saveCompRecord()">登録する</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">当月の振替取得一覧
+      <div class="card-actions"><button class="btn btn-sm btn-gold" onclick="exportCSV('comp')">⬇ CSVエクスポート</button></div>
+    </div>
+    <div class="table-wrap" id="compListWrap"><div class="empty-state"><div class="empty-icon">🔄</div><p>社員を選択すると一覧が表示されます。</p></div></div>
+  </div>
+</div>
+
+<!-- 全体集計 -->
+<div id="page-summary-all" class="page">
+  <div class="page-header">
+    <div><div class="page-title">全体集計</div><div class="page-subtitle">全社員の残業状況</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-sm btn-green" onclick="exportCSV('all')">⬇ 全体CSV</button>
+      <button class="btn btn-sm btn-secondary" onclick="loadAll()">🔄 更新</button>
+      <div class="month-selector">
+        <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="month-display" id="md3">—</div>
+        <button class="month-btn" onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+  </div>
+  <div id="allAlerts"></div>
+  <div class="stats-grid" id="allStatsGrid"></div>
+  <div class="card"><div class="card-title">社員別 残業時間</div><div class="bar-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>残業時間</div><div class="legend-item"><div class="legend-dot" style="background:var(--gold-light)"></div>振替取得</div></div><div class="bar-chart" id="allBarChart"></div></div>
+  <div class="card"><div class="card-title">36協定 残業時間アラート</div><div class="ota-wrap" id="allOtaWrap"></div></div>
+  <div class="card"><div class="card-title">全社員 詳細一覧</div><div class="table-wrap" id="allDetailTable"></div></div>
+</div>
+
+<!-- 個人集計 -->
+<div id="page-summary-person" class="page">
+  <div class="page-header">
+    <div><div class="page-title">個人集計</div><div class="page-subtitle">社員ごとの残業履歴</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-sm btn-gold" onclick="exportCSV('person')">⬇ 個人CSV</button>
+      <div class="month-selector">
+        <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="month-display" id="md4">—</div>
+        <button class="month-btn" onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+  </div>
+  <div class="person-tabs" id="personTabs"></div>
+  <div id="personAlerts"></div>
+  <div class="stats-grid" id="personStatsGrid"></div>
+  <div class="card"><div class="card-title">月別推移（直近6ヶ月）</div><div class="bar-chart" id="personMonthChart"></div></div>
+  <div class="card"><div class="card-title">残業・振替 詳細履歴</div><div class="table-wrap" id="personDetailTable"></div></div>
+</div>
+
+<!-- 社員管理 -->
+<div id="page-employees" class="page">
+  <div class="page-header"><div><div class="page-title">社員管理</div><div class="page-subtitle">社員の追加・編集・削除</div></div></div>
+  <div class="card">
+    <div class="card-title">社員追加</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="required">氏名</label><input type="text" id="emp_name" placeholder="例）山田 太郎"></div>
+      <div class="form-group"><label class="required">部署</label><input type="text" id="emp_dept" placeholder="例）貿易部"></div>
+      <div class="form-group"><label>役職</label><input type="text" id="emp_role" placeholder="例）担当"></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addEmployee()">追加する</button></div>
+  </div>
+  <div class="card"><div class="card-title">登録済み社員</div><div class="table-wrap" id="empListWrap"></div></div>
+</div>
+
+<!-- 36協定設定 -->
+<div id="page-settings" class="page">
+  <div class="page-header"><div><div class="page-title">36協定設定</div><div class="page-subtitle">残業時間の上限アラートを設定します</div></div></div>
+  <div class="card">
+    <div class="card-title">月次残業上限</div>
+    <div class="notice">⚠️ 36協定の一般条項では月45時間・年360時間が原則上限です。特別条項でも月100時間未満（他月平均80時間以内）が法定上限です。</div>
+    <div class="form-grid">
+      <div class="form-group"><label>警告ライン（黄色）</label><div class="ota-limit-row"><input type="number" id="s_warn" min="1" max="200" value="36"><span>時間 / 月</span></div></div>
+      <div class="form-group"><label>上限ライン（赤）</label><div class="ota-limit-row"><input type="number" id="s_danger" min="1" max="200" value="45"><span>時間 / 月</span></div></div>
+      <div class="form-group"><label>特別条項 上限</label><div class="ota-limit-row"><input type="number" id="s_special" min="1" max="200" value="80"><span>時間 / 月</span></div></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="saveSettings()">設定を保存</button></div>
+  </div>
+  <div class="card">
+    <div class="card-title">年間上限設定</div>
+    <div class="form-grid">
+      <div class="form-group"><label>年間警告ライン</label><div class="ota-limit-row"><input type="number" id="s_year_warn" min="1" max="2000" value="300"><span>時間 / 年</span></div></div>
+      <div class="form-group"><label>年間危険ライン</label><div class="ota-limit-row"><input type="number" id="s_year_danger" min="1" max="2000" value="360"><span>時間 / 年</span></div></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="saveSettings()">設定を保存</button></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:var(--ink-soft)">接続設定</div>
+    <div style="font-size:13px;color:var(--ink-soft);margin-bottom:16px">GAS URLを変更する場合はこちら</div>
+    <button class="btn btn-secondary btn-sm" onclick="resetGASUrl()">🔗 GAS URLを再設定</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- 残業記録 編集モーダル -->
+<div class="modal-overlay hidden" id="editOTModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-title">残業記録を編集</div>
+    <input type="hidden" id="eot_id">
+    <div class="form-grid">
+      <div class="form-group"><label class="required">残業日</label><input type="date" id="eot_date"></div>
+      <div class="form-group"><label>残業種別</label>
+        <select id="eot_type"><option>通常残業</option><option>早朝出勤</option><option>休日出勤</option><option>接待交際</option><option>出張</option><option>その他</option></select>
+      </div>
+      <div class="form-group half"><label class="required">残業時間帯</label>
+        <div class="time-range">
+          <input type="time" id="eot_os" oninput="calcEOT()"><span class="time-sep">→</span>
+          <input type="time" id="eot_oe" oninput="calcEOT()">
+          <div class="calc-result" id="eot_or">—</div>
+        </div>
+      </div>
+      <div class="form-group full"><label class="required">残業理由</label><textarea id="eot_reason"></textarea></div>
+    </div>
+    <hr class="section-divider">
+    <div class="toggle-section">
+      <label class="toggle"><input type="checkbox" id="eot_tComp" onchange="toggleEOTComp()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      <span class="toggle-label">振替取得も編集する</span>
+    </div>
+    <div class="collapsible" id="eot_compSec">
+      <div class="form-grid">
+        <div class="form-group"><label>振替取得日</label><input type="date" id="eot_cd"></div>
+        <div class="form-group half"><label>振替取得時間帯</label>
+          <div class="time-range">
+            <input type="time" id="eot_cs" oninput="calcEOTComp()"><span class="time-sep">→</span>
+            <input type="time" id="eot_ce" oninput="calcEOTComp()">
+            <div class="calc-result gold" id="eot_cr">—</div>
+          </div>
+        </div>
+        <div class="form-group full"><label>振替備考</label><input type="text" id="eot_creason"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeEditOTModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEditOTRecord()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 振替記録 編集モーダル -->
+<div class="modal-overlay hidden" id="editCompModal">
+  <div class="modal">
+    <div class="modal-title">振替取得を編集</div>
+    <input type="hidden" id="ec_id">
+    <div class="form-grid">
+      <div class="form-group"><label class="required">振替取得日</label><input type="date" id="ec_date"></div>
+      <div class="form-group half"><label class="required">振替取得時間帯</label>
+        <div class="time-range">
+          <input type="time" id="ec_start" oninput="calcEC()"><span class="time-sep">→</span>
+          <input type="time" id="ec_end" oninput="calcEC()">
+          <div class="calc-result gold" id="ec_result">—</div>
+        </div>
+      </div>
+      <div class="form-group full"><label>理由・備考</label><input type="text" id="ec_reason"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeEditCompModal()">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveEditCompRecord()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 社員編集モーダル -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <div class="modal-title">社員情報を編集</div>
+    <input type="hidden" id="edit_id">
+    <div class="form-grid">
+      <div class="form-group"><label class="required">氏名</label><input type="text" id="edit_name"></div>
+      <div class="form-group"><label class="required">部署</label><input type="text" id="edit_dept"></div>
+      <div class="form-group"><label>役職</label><input type="text" id="edit_role"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEditEmployee()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  GAS API
+// ══════════════════════════════════════════════════
+const GAS_URL_KEY = 'dc_gas_url_v1';
+
+function getGASUrl() { return localStorage.getItem(GAS_URL_KEY) || ''; }
+function setGASUrl(url) { localStorage.setItem(GAS_URL_KEY, url); }
+
+async function gasGet(params) {
+  const url = getGASUrl();
+  const qs  = Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+  const res = await fetch(`${url}?${qs}`);
+  return res.json();
+}
+
+async function gasPost(body) {
+  const url = getGASUrl();
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+function setSyncStatus(s) {
+  const el = document.getElementById('syncStatus');
+  el.className = 'sync-status ' + s;
+  el.textContent = s === 'syncing' ? '⟳ 同期中…' : s === 'synced' ? '● 同期済み' : '✕ エラー';
+}
+
+function showLoading(v) { document.getElementById('loadingOverlay').classList.toggle('hidden', !v); }
+
+// ══════════════════════════════════════════════════
+//  セットアップ
+// ══════════════════════════════════════════════════
+async function connectGAS() {
+  const url = document.getElementById('gasUrlInput').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    document.getElementById('setupError').style.display = 'block';
+    return;
+  }
+  setGASUrl(url);
+  document.getElementById('connectBtn').disabled = true;
+  document.getElementById('connectBtn').textContent = '接続中…';
+  try {
+    const res = await fetch(`${url}?action=setup`);
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('setupScreen').classList.add('hidden');
+      await loadAll();
+    } else {
+      throw new Error(data.error);
+    }
+  } catch(e) {
+    document.getElementById('setupError').style.display = 'block';
+    document.getElementById('connectBtn').disabled = false;
+    document.getElementById('connectBtn').textContent = '接続して開始';
+  }
+}
+
+function resetGASUrl() {
+  if (!confirm('GAS URLをリセットして再設定画面を表示しますか？')) return;
+  localStorage.removeItem(GAS_URL_KEY);
+  location.reload();
+}
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let state = {
+  month: ym(),
+  employees: [],
+  records: [],
+  compRecords: [],
+  settings: {warn:36, danger:45, special:80, yearWarn:300, yearDanger:360},
+  selectedPersonTab: '',
+};
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+async function init() {
+  ['editModal','editOTModal','editCompModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('click', function(e){ if(e.target===this) this.classList.add('hidden'); });
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key==='Escape') ['editModal','editOTModal','editCompModal'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+  });
+
+  const savedUrl = getGASUrl();
+  if (savedUrl) {
+    document.getElementById('setupScreen').classList.add('hidden');
+    await loadAll();
+  }
+  // URLがなければセットアップ画面を表示したまま
+}
+
+async function loadAll() {
+  showLoading(true);
+  setSyncStatus('syncing');
+  try {
+    const data = await gasGet({ action: 'getAll' });
+    if (!data.ok) throw new Error(data.error);
+    state.employees    = data.employees    || [];
+    state.records      = data.records      || [];
+    state.compRecords  = data.compRecords  || [];
+    if (data.settings) state.settings = { ...state.settings, ...data.settings };
+    setSyncStatus('synced');
+    updateMonths();
+    populateSelects();
+    renderEmpList();
+    loadSettingsForm();
+    renderAllSummary();
+    renderPersonTabs();
+    refreshOTList();
+    refreshCompList();
+  } catch(e) {
+    setSyncStatus('error');
+    alert('データの読み込みに失敗しました。\n' + e.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  NAV / MONTH
+// ══════════════════════════════════════════════════
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='summary-all') renderAllSummary();
+  if(id==='summary-person') { renderPersonTabs(); renderPersonSummary(); }
+}
+
+function changeMonth(dir) {
+  const [y,m] = state.month.split('-').map(Number);
+  const d = new Date(y, m-1+dir, 1);
+  state.month = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  updateMonths();
+  refreshOTList(); refreshCompList();
+  renderAllSummary(); renderPersonSummary();
+}
+
+function updateMonths() {
+  const [y,m] = state.month.split('-').map(Number);
+  const lbl = `${y}年${m}月`;
+  ['md1','md2','md3','md4'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=lbl; });
+  document.getElementById('headerMonth').textContent = lbl;
+}
+
+function ym() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════════════════
+//  EMPLOYEE
+// ══════════════════════════════════════════════════
+function populateSelects() {
+  ['inputEmp','compInputEmp'].forEach(sid => {
+    const sel = document.getElementById(sid); if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">-- 社員を選択 --</option>';
+    state.employees.forEach(e => { const o=document.createElement('option'); o.value=e.id; o.textContent=`${e.name}（${e.dept}）`; sel.appendChild(o); });
+    sel.value = cur;
+  });
+}
+
+async function addEmployee() {
+  const name = document.getElementById('emp_name').value.trim();
+  const dept = document.getElementById('emp_dept').value.trim();
+  const role = document.getElementById('emp_role').value.trim();
+  if(!name||!dept) { alert('氏名と部署は必須です。'); return; }
+  const emp = { id:'e'+Date.now(), name, dept, role };
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveEmployee', data:emp });
+    if(!res.ok) throw new Error(res.error);
+    state.employees.push(emp);
+    document.getElementById('emp_name').value='';
+    document.getElementById('emp_dept').value='';
+    document.getElementById('emp_role').value='';
+    setSyncStatus('synced');
+    populateSelects(); renderEmpList(); renderPersonTabs();
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+function openEditModal(id) {
+  const emp = state.employees.find(e=>e.id===id); if(!emp) return;
+  document.getElementById('edit_id').value=emp.id;
+  document.getElementById('edit_name').value=emp.name;
+  document.getElementById('edit_dept').value=emp.dept;
+  document.getElementById('edit_role').value=emp.role||'';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+
+async function saveEditEmployee() {
+  const id   = document.getElementById('edit_id').value;
+  const name = document.getElementById('edit_name').value.trim();
+  const dept = document.getElementById('edit_dept').value.trim();
+  const role = document.getElementById('edit_role').value.trim();
+  if(!name||!dept) { alert('氏名と部署は必須です。'); return; }
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveEmployee', data:{id,name,dept,role} });
+    if(!res.ok) throw new Error(res.error);
+    const emp = state.employees.find(e=>e.id===id);
+    if(emp) { emp.name=name; emp.dept=dept; emp.role=role; }
+    setSyncStatus('synced');
+    closeEditModal(); populateSelects(); renderEmpList(); renderPersonTabs(); renderAllSummary();
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+async function removeEmployee(id) {
+  if(!confirm('削除しますか？この社員のすべてのデータが削除されます。')) return;
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'deleteEmployee', id });
+    if(!res.ok) throw new Error(res.error);
+    state.employees    = state.employees.filter(e=>e.id!==id);
+    state.records      = state.records.filter(r=>r.empId!==id);
+    state.compRecords  = state.compRecords.filter(r=>r.empId!==id);
+    setSyncStatus('synced');
+    populateSelects(); renderEmpList(); renderPersonTabs(); renderAllSummary();
+  } catch(e) { setSyncStatus('error'); alert('削除に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+function renderEmpList() {
+  const wrap = document.getElementById('empListWrap');
+  if(!state.employees.length) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><p>社員が登録されていません。</p></div>'; return; }
+  wrap.innerHTML=`<table><thead><tr><th>氏名</th><th>部署</th><th>役職</th><th>残業件数</th><th>振替件数</th><th style="text-align:right">操作</th></tr></thead><tbody>
+  ${state.employees.map(e=>{
+    const oc=state.records.filter(r=>r.empId===e.id).length;
+    const cc=state.compRecords.filter(r=>r.empId===e.id).length;
+    return `<tr><td><strong>${e.name}</strong></td><td>${e.dept}</td><td>${e.role||'—'}</td>
+      <td class="td-mono">${oc}件</td><td class="td-mono">${cc}件</td>
+      <td style="text-align:right">
+        <button class="btn-icon edit" onclick="openEditModal('${e.id}')" title="編集">✏️</button>
+        <button class="btn-icon" onclick="removeEmployee('${e.id}')" title="削除">✕</button>
+      </td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════
+//  OT FORM
+// ══════════════════════════════════════════════════
+function calcOT() { document.getElementById('f_or').textContent=hl(document.getElementById('f_os').value,document.getElementById('f_oe').value); }
+function calcComp() { document.getElementById('f_cr').textContent=hl(document.getElementById('f_cs').value,document.getElementById('f_ce').value); }
+function toggleComp() { document.getElementById('compSec').classList.toggle('open',document.getElementById('tComp').checked); }
+function onInputEmpChange() { refreshOTList(); renderOTAlert(document.getElementById('inputEmp').value); }
+
+function clearOTForm() {
+  ['f_date','f_os','f_oe','f_cd','f_cs','f_ce','f_reason','f_creason'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_type').value='通常残業';
+  document.getElementById('f_or').textContent='—'; document.getElementById('f_cr').textContent='—';
+  document.getElementById('tComp').checked=false;
+  document.getElementById('compSec').classList.remove('open');
+}
+
+async function saveOTRecord() {
+  const empId  = document.getElementById('inputEmp').value;
+  if(!empId) { alert('社員を選択してください。'); return; }
+  const date   = document.getElementById('f_date').value;
+  const os     = document.getElementById('f_os').value, oe=document.getElementById('f_oe').value;
+  const reason = document.getElementById('f_reason').value.trim();
+  if(!date)        { alert('残業日を入力してください。'); return; }
+  if(!os||!oe)     { alert('残業時間帯を入力してください。'); return; }
+  if(mins(os,oe)<=0){ alert('終了時間は開始より後にしてください。'); return; }
+  if(!reason)      { alert('残業理由を入力してください。'); return; }
+  const hasComp = document.getElementById('tComp').checked;
+  const now = new Date().toISOString();
+  const rec = {
+    id:'r'+Date.now(), empId, date,
+    type:document.getElementById('f_type').value,
+    otStart:os, otEnd:oe, otMinutes:mins(os,oe),
+    reason, hasComp,
+    compDate:hasComp?document.getElementById('f_cd').value:'',
+    compStart:hasComp?document.getElementById('f_cs').value:'',
+    compEnd:hasComp?document.getElementById('f_ce').value:'',
+    compMinutes:hasComp?mins(document.getElementById('f_cs').value,document.getElementById('f_ce').value):0,
+    compReason:hasComp?document.getElementById('f_creason').value.trim():'',
+    createdAt:now,
+  };
+  const btn = document.getElementById('btnSaveOT');
+  btn.disabled=true; showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveOTRecord', data:rec });
+    if(!res.ok) throw new Error(res.error);
+    state.records.push(rec);
+    setSyncStatus('synced');
+    clearOTForm(); refreshOTList(); renderOTAlert(empId); renderAllSummary();
+    alert('登録しました。');
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { btn.disabled=false; showLoading(false); }
+}
+
+async function deleteOTRecord(id) {
+  if(!confirm('この記録を削除しますか？')) return;
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'deleteOTRecord', id });
+    if(!res.ok) throw new Error(res.error);
+    state.records = state.records.filter(r=>r.id!==id);
+    setSyncStatus('synced');
+    refreshOTList(); renderAllSummary(); renderPersonSummary();
+  } catch(e) { setSyncStatus('error'); alert('削除に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+function refreshOTList() {
+  const empId = document.getElementById('inputEmp').value;
+  const wrap  = document.getElementById('otListWrap');
+  if(!empId) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>社員を選択すると一覧が表示されます。</p></div>'; return; }
+  const recs = monthRecs(state.records,empId,state.month).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!recs.length) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>この月の登録がありません。</p></div>'; return; }
+  wrap.innerHTML=`<table><thead><tr><th>残業日</th><th>種別</th><th>時間帯</th><th>残業</th><th>振替取得</th><th>差引</th><th>残業理由</th><th></th></tr></thead><tbody>
+  ${recs.map(r=>{
+    const net=r.otMinutes-r.compMinutes;
+    return `<tr>
+      <td class="td-date">${r.date}</td>
+      <td><span class="badge badge-ot">${r.type}</span></td>
+      <td class="td-mono">${r.otStart}〜${r.otEnd}</td>
+      <td class="td-mono" style="color:var(--red)">${fmt(r.otMinutes)}</td>
+      <td>${r.hasComp?`<span class="badge badge-comp">${r.compDate||''} ${fmt(r.compMinutes)}</span>`:'<span style="color:var(--ink-soft);font-size:12px">—</span>'}</td>
+      <td>${net>0?`<span class="badge badge-net-pos">+${fmt(net)}</span>`:`<span class="badge badge-net-zero">±0</span>`}</td>
+      <td style="max-width:160px;font-size:12px;color:var(--ink-mid)">${r.reason}</td>
+      <td><button class="btn-icon" onclick="deleteOTRecord('${r.id}')">✕</button></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function renderOTAlert(empId) {
+  const b=document.getElementById('otAlertBanner');
+  if(!empId){b.innerHTML='';return;}
+  const s=state.settings;
+  const otH=getTotalOT(empId,state.month)/60, netH=getNetOT(empId,state.month)/60;
+  const r=v=>Math.round(v*10)/10;
+  if(otH>=s.special)      b.innerHTML=`<div class="alert-banner alert-danger"><span class="alert-icon">🚨</span><div><strong>特別条項超過の可能性</strong> — 当月残業 ${r(otH)}h（実質 ${r(netH)}h）/ 特別条項上限 ${s.special}h</div></div>`;
+  else if(otH>=s.danger)  b.innerHTML=`<div class="alert-banner alert-danger"><span class="alert-icon">⚠️</span><div><strong>36協定 一般条項上限超過</strong> — 当月残業 ${r(otH)}h（実質 ${r(netH)}h）/ 上限 ${s.danger}h</div></div>`;
+  else if(otH>=s.warn)    b.innerHTML=`<div class="alert-banner alert-warn"><span class="alert-icon">⚠️</span><div><strong>警告ライン到達</strong> — 当月残業 ${r(otH)}h（実質 ${r(netH)}h）/ 上限 ${s.danger}h</div></div>`;
+  else b.innerHTML='';
+}
+
+// ══════════════════════════════════════════════════
+//  COMP FORM
+// ══════════════════════════════════════════════════
+function calcCompForm() { document.getElementById('cf_result').textContent=hl(document.getElementById('cf_start').value,document.getElementById('cf_end').value); }
+function onCompInputEmpChange() { refreshCompList(); }
+function clearCompForm() {
+  ['cf_date','cf_start','cf_end','cf_reason'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cf_result').textContent='—';
+}
+
+async function saveCompRecord() {
+  const empId = document.getElementById('compInputEmp').value;
+  if(!empId) { alert('社員を選択してください。'); return; }
+  const date  = document.getElementById('cf_date').value;
+  const start = document.getElementById('cf_start').value, end=document.getElementById('cf_end').value;
+  if(!date)           { alert('振替取得日を入力してください。'); return; }
+  if(!start||!end)    { alert('時間帯を入力してください。'); return; }
+  if(mins(start,end)<=0){ alert('終了時間は開始より後にしてください。'); return; }
+  const rec = { id:'c'+Date.now(), empId, date, start, end, minutes:mins(start,end), reason:document.getElementById('cf_reason').value.trim(), createdAt:new Date().toISOString() };
+  const btn = document.getElementById('btnSaveComp');
+  btn.disabled=true; showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveCompRecord', data:rec });
+    if(!res.ok) throw new Error(res.error);
+    state.compRecords.push(rec);
+    setSyncStatus('synced');
+    clearCompForm(); refreshCompList(); renderAllSummary();
+    alert('振替取得を登録しました。');
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { btn.disabled=false; showLoading(false); }
+}
+
+async function deleteCompRecord(id) {
+  if(!confirm('この振替記録を削除しますか？')) return;
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'deleteCompRecord', id });
+    if(!res.ok) throw new Error(res.error);
+    state.compRecords = state.compRecords.filter(r=>r.id!==id);
+    setSyncStatus('synced');
+    refreshCompList(); renderAllSummary(); renderPersonSummary();
+  } catch(e) { setSyncStatus('error'); alert('削除に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+function refreshCompList() {
+  const empId = document.getElementById('compInputEmp').value;
+  const wrap  = document.getElementById('compListWrap');
+  if(!empId) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">🔄</div><p>社員を選択すると一覧が表示されます。</p></div>'; return; }
+  const recs = monthCompRecs(empId,state.month).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!recs.length) { wrap.innerHTML='<div class="empty-state"><div class="empty-icon">🔄</div><p>この月の振替記録がありません。</p></div>'; return; }
+  wrap.innerHTML=`<table><thead><tr><th>振替取得日</th><th>時間帯</th><th>取得時間</th><th>理由・備考</th><th></th></tr></thead><tbody>
+  ${recs.map(r=>`<tr>
+    <td class="td-date">${r.date}</td>
+    <td class="td-mono">${r.start}〜${r.end}</td>
+    <td class="td-mono" style="color:var(--gold)">${fmt(r.minutes)}</td>
+    <td style="font-size:12px;color:var(--ink-mid)">${r.reason||'—'}</td>
+    <td><button class="btn-icon" onclick="deleteCompRecord('${r.id}')">✕</button></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════
+//  OT 編集モーダル
+// ══════════════════════════════════════════════════
+function openEditOTModal(id) {
+  const r=state.records.find(x=>x.id===id); if(!r) return;
+  document.getElementById('eot_id').value=r.id;
+  document.getElementById('eot_date').value=r.date;
+  document.getElementById('eot_type').value=r.type;
+  document.getElementById('eot_os').value=r.otStart;
+  document.getElementById('eot_oe').value=r.otEnd;
+  document.getElementById('eot_or').textContent=hl(r.otStart,r.otEnd);
+  document.getElementById('eot_reason').value=r.reason;
+  const hasComp=!!(r.hasComp||r.compMinutes>0);
+  document.getElementById('eot_tComp').checked=hasComp;
+  document.getElementById('eot_compSec').classList.toggle('open',hasComp);
+  document.getElementById('eot_cd').value=r.compDate||'';
+  document.getElementById('eot_cs').value=r.compStart||'';
+  document.getElementById('eot_ce').value=r.compEnd||'';
+  document.getElementById('eot_cr').textContent=r.compMinutes?hl(r.compStart,r.compEnd):'—';
+  document.getElementById('eot_creason').value=r.compReason||'';
+  document.getElementById('editOTModal').classList.remove('hidden');
+}
+function closeEditOTModal() { document.getElementById('editOTModal').classList.add('hidden'); }
+function calcEOT()     { document.getElementById('eot_or').textContent=hl(document.getElementById('eot_os').value,document.getElementById('eot_oe').value); }
+function calcEOTComp() { document.getElementById('eot_cr').textContent=hl(document.getElementById('eot_cs').value,document.getElementById('eot_ce').value); }
+function toggleEOTComp(){ document.getElementById('eot_compSec').classList.toggle('open',document.getElementById('eot_tComp').checked); }
+
+async function saveEditOTRecord() {
+  const id     = document.getElementById('eot_id').value;
+  const date   = document.getElementById('eot_date').value;
+  const os     = document.getElementById('eot_os').value, oe=document.getElementById('eot_oe').value;
+  const reason = document.getElementById('eot_reason').value.trim();
+  if(!date)         { alert('残業日を入力してください。'); return; }
+  if(!os||!oe)      { alert('残業時間帯を入力してください。'); return; }
+  if(mins(os,oe)<=0){ alert('終了時間は開始より後にしてください。'); return; }
+  if(!reason)       { alert('残業理由を入力してください。'); return; }
+  const hasComp=document.getElementById('eot_tComp').checked;
+  const r=state.records.find(x=>x.id===id); if(!r) return;
+  const updated = { ...r, date, type:document.getElementById('eot_type').value,
+    otStart:os, otEnd:oe, otMinutes:mins(os,oe), reason, hasComp,
+    compDate:hasComp?document.getElementById('eot_cd').value:'',
+    compStart:hasComp?document.getElementById('eot_cs').value:'',
+    compEnd:hasComp?document.getElementById('eot_ce').value:'',
+    compMinutes:hasComp?mins(document.getElementById('eot_cs').value,document.getElementById('eot_ce').value):0,
+    compReason:hasComp?document.getElementById('eot_creason').value.trim():'',
+  };
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveOTRecord', data:updated });
+    if(!res.ok) throw new Error(res.error);
+    Object.assign(r, updated);
+    setSyncStatus('synced');
+    closeEditOTModal(); renderPersonSummary(); refreshOTList(); renderAllSummary();
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+// ══════════════════════════════════════════════════
+//  振替 編集モーダル
+// ══════════════════════════════════════════════════
+function openEditCompModal(id) {
+  const r=state.compRecords.find(x=>x.id===id); if(!r) return;
+  document.getElementById('ec_id').value=r.id;
+  document.getElementById('ec_date').value=r.date;
+  document.getElementById('ec_start').value=r.start;
+  document.getElementById('ec_end').value=r.end;
+  document.getElementById('ec_result').textContent=hl(r.start,r.end);
+  document.getElementById('ec_reason').value=r.reason||'';
+  document.getElementById('editCompModal').classList.remove('hidden');
+}
+function closeEditCompModal() { document.getElementById('editCompModal').classList.add('hidden'); }
+function calcEC() { document.getElementById('ec_result').textContent=hl(document.getElementById('ec_start').value,document.getElementById('ec_end').value); }
+
+async function saveEditCompRecord() {
+  const id    = document.getElementById('ec_id').value;
+  const date  = document.getElementById('ec_date').value;
+  const start = document.getElementById('ec_start').value, end=document.getElementById('ec_end').value;
+  if(!date)           { alert('振替取得日を入力してください。'); return; }
+  if(!start||!end)    { alert('時間帯を入力してください。'); return; }
+  if(mins(start,end)<=0){ alert('終了時間は開始より後にしてください。'); return; }
+  const r=state.compRecords.find(x=>x.id===id); if(!r) return;
+  const updated = { ...r, date, start, end, minutes:mins(start,end), reason:document.getElementById('ec_reason').value.trim() };
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveCompRecord', data:updated });
+    if(!res.ok) throw new Error(res.error);
+    Object.assign(r, updated);
+    setSyncStatus('synced');
+    closeEditCompModal(); renderPersonSummary(); refreshCompList(); renderAllSummary();
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+// ══════════════════════════════════════════════════
+//  ALL SUMMARY
+// ══════════════════════════════════════════════════
+function renderAllSummary() {
+  const [y,m]=state.month.split('-').map(Number);
+  const mr=state.records.filter(r=>{ const d=new Date(r.date); return d.getFullYear()===y&&d.getMonth()+1===m; });
+  const mc=state.compRecords.filter(r=>{ const d=new Date(r.date); return d.getFullYear()===y&&d.getMonth()+1===m; });
+  const totalOT=mr.reduce((s,r)=>s+Number(r.otMinutes),0);
+  const totalComp=mr.reduce((s,r)=>s+Number(r.compMinutes),0)+mc.reduce((s,r)=>s+Number(r.minutes),0);
+  const net=Math.max(totalOT-totalComp,0);
+  const empCnt=new Set(mr.map(r=>r.empId)).size;
+
+  document.getElementById('allStatsGrid').innerHTML=`
+    <div class="stat-card accent"><div class="stat-label">総残業時間</div><div class="stat-value">${fmtS(totalOT)}<span class="stat-unit">h</span></div></div>
+    <div class="stat-card gold"><div class="stat-label">振替取得合計</div><div class="stat-value">${fmtS(totalComp)}<span class="stat-unit">h</span></div></div>
+    <div class="stat-card accent"><div class="stat-label">実質残業時間</div><div class="stat-value">${fmtS(net)}<span class="stat-unit">h</span></div></div>
+    <div class="stat-card"><div class="stat-label">残業者数</div><div class="stat-value">${empCnt}<span class="stat-unit">名</span></div></div>`;
+
+  const maxM=Math.max(...state.employees.map(e=>mr.filter(r=>r.empId===e.id).reduce((s,r)=>s+Number(r.otMinutes),0)),1);
+  document.getElementById('allBarChart').innerHTML=state.employees.map(e=>{
+    const ot=mr.filter(r=>r.empId===e.id).reduce((s,r)=>s+Number(r.otMinutes),0);
+    const comp=mr.filter(r=>r.empId===e.id).reduce((s,r)=>s+Number(r.compMinutes),0)+mc.filter(r=>r.empId===e.id).reduce((s,r)=>s+Number(r.minutes),0);
+    const op=(ot/maxM)*100, cp=Math.min((comp/maxM)*100,op);
+    return `<div class="bar-row"><div class="bar-label">${e.name.split(' ')[0]}</div><div class="bar-track"><div class="bar-fill bar-ot" style="width:${op}%"></div><div class="bar-fill bar-comp" style="width:${cp}%;position:absolute;top:0;left:0;opacity:.7"></div></div><div class="bar-value">${fmt(ot)}</div></div>`;
+  }).join('');
+
+  const s=state.settings;
+  document.getElementById('allOtaWrap').innerHTML=state.employees.map(e=>{
+    const netM=getNetOT(e.id,state.month), h=netM/60;
+    const pct=Math.min((h/s.special)*100,100);
+    const cls=h>=s.danger?'danger':h>=s.warn?'warn':'ok';
+    const lbl=h>=s.danger?'上限超過':h>=s.warn?'要注意':'正常';
+    return `<div class="ota-row"><div class="ota-name">${e.name}</div><div class="ota-track"><div class="ota-fill ${cls}" style="width:${pct}%"></div></div><div class="ota-val">${Math.round(h*10)/10}h / ${s.danger}h</div><div class="ota-status ${cls}">${lbl}</div></div>`;
+  }).join('');
+
+  const alerts=state.employees.filter(e=>getNetOT(e.id,state.month)/60>=s.warn);
+  document.getElementById('allAlerts').innerHTML=alerts.map(e=>{
+    const h=Math.round(getNetOT(e.id,state.month)/60*10)/10;
+    const cls=h>=s.danger?'alert-danger':'alert-warn';
+    return `<div class="alert-banner ${cls}"><span class="alert-icon">${h>=s.danger?'🚨':'⚠️'}</span><div><strong>${e.name}</strong> — 当月実質残業 ${h}h${h>=s.danger?' ⚠️ 36協定上限超過':' 警告ライン超過'}</div></div>`;
+  }).join('');
+
+  document.getElementById('allDetailTable').innerHTML=`<table><thead><tr><th>社員</th><th>部署</th><th>残業件数</th><th>残業時間</th><th>振替取得</th><th>実質残業</th></tr></thead><tbody>
+  ${state.employees.map(e=>{
+    const er=mr.filter(r=>r.empId===e.id);
+    const ot=er.reduce((s,r)=>s+Number(r.otMinutes),0);
+    const comp=er.reduce((s,r)=>s+Number(r.compMinutes),0)+mc.filter(r=>r.empId===e.id).reduce((s,r)=>s+Number(r.minutes),0);
+    const net=Math.max(ot-comp,0);
+    return `<tr><td><strong>${e.name}</strong></td><td style="font-size:12px;color:var(--ink-soft)">${e.dept}</td><td class="td-mono">${er.length}件</td><td class="td-mono" style="color:var(--red)">${fmt(ot)}</td><td class="td-mono" style="color:var(--gold)">${fmt(comp)}</td><td>${net>0?`<span class="badge badge-net-pos">${fmt(net)}</span>`:`<span class="badge badge-net-zero">±0</span>`}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════
+//  PERSON SUMMARY
+// ══════════════════════════════════════════════════
+function renderPersonTabs() {
+  const tabs=document.getElementById('personTabs');
+  if(!state.employees.length) { tabs.innerHTML='<div style="font-size:13px;color:var(--ink-soft);padding:8px 0">社員が登録されていません。</div>'; return; }
+  if(!state.selectedPersonTab||!state.employees.find(e=>e.id===state.selectedPersonTab)) state.selectedPersonTab=state.employees[0].id;
+  tabs.innerHTML=state.employees.map(e=>`<button class="person-tab ${state.selectedPersonTab===e.id?'active':''}" onclick="selectPersonTab('${e.id}')">${e.name}</button>`).join('');
+}
+function selectPersonTab(id) { state.selectedPersonTab=id; renderPersonTabs(); renderPersonSummary(); }
+
+function renderPersonSummary() {
+  if(!state.selectedPersonTab) return;
+  const emp=state.employees.find(e=>e.id===state.selectedPersonTab); if(!emp) return;
+  const [y,m]=state.month.split('-').map(Number);
+  const mr=monthRecs(state.records,emp.id,state.month).sort((a,b)=>a.date.localeCompare(b.date));
+  const mc=monthCompRecs(emp.id,state.month).sort((a,b)=>a.date.localeCompare(b.date));
+  const totalOT=mr.reduce((s,r)=>s+Number(r.otMinutes),0);
+  const totalComp=mr.reduce((s,r)=>s+Number(r.compMinutes),0)+mc.reduce((s,r)=>s+Number(r.minutes),0);
+  const net=Math.max(totalOT-totalComp,0);
+  const s=state.settings;
+
+  const pa=document.getElementById('personAlerts');
+  const nh=net/60;
+  if(nh>=s.danger) pa.innerHTML=`<div class="alert-banner alert-danger"><span class="alert-icon">🚨</span><div><strong>36協定 上限超過</strong> — 実質残業 ${Math.round(nh*10)/10}h / 上限 ${s.danger}h</div></div>`;
+  else if(nh>=s.warn) pa.innerHTML=`<div class="alert-banner alert-warn"><span class="alert-icon">⚠️</span><div><strong>警告ライン超過</strong> — 実質残業 ${Math.round(nh*10)/10}h / 上限 ${s.danger}h</div></div>`;
+  else pa.innerHTML='';
+
+  const statCls=net>=s.danger*60?'accent':net>=s.warn*60?'gold':'green';
+  document.getElementById('personStatsGrid').innerHTML=`
+    <div class="stat-card accent"><div class="stat-label">残業時間</div><div class="stat-value">${fmtS(totalOT)}<span class="stat-unit">h</span></div></div>
+    <div class="stat-card gold"><div class="stat-label">振替取得</div><div class="stat-value">${fmtS(totalComp)}<span class="stat-unit">h</span></div></div>
+    <div class="stat-card ${statCls}"><div class="stat-label">実質残業</div><div class="stat-value">${fmtS(net)}<span class="stat-unit">h</span></div></div>
+    <div class="stat-card"><div class="stat-label">残業回数</div><div class="stat-value">${mr.length}<span class="stat-unit">回</span></div></div>`;
+
+  const months6=[];
+  for(let i=5;i>=0;i--){ const d=new Date(y,m-1-i,1); months6.push({y:d.getFullYear(),m:d.getMonth()+1}); }
+  const maxM=Math.max(...months6.map(({y:my,m:mm})=>monthRecs(state.records,emp.id,`${my}-${String(mm).padStart(2,'0')}`).reduce((s,r)=>s+Number(r.otMinutes),0)),1);
+  document.getElementById('personMonthChart').innerHTML=months6.map(({y:my,m:mm})=>{
+    const ymStr=`${my}-${String(mm).padStart(2,'0')}`;
+    const rs=monthRecs(state.records,emp.id,ymStr);
+    const cs=monthCompRecs(emp.id,ymStr);
+    const ot=rs.reduce((s,r)=>s+Number(r.otMinutes),0);
+    const comp=rs.reduce((s,r)=>s+Number(r.compMinutes),0)+cs.reduce((s,r)=>s+Number(r.minutes),0);
+    const op=(ot/maxM)*100, cp=Math.min((comp/maxM)*100,op);
+    const isCur=my===y&&mm===m;
+    return `<div class="bar-row"><div class="bar-label" style="${isCur?'font-weight:700;color:var(--ink)':''}">${my}/${String(mm).padStart(2,'0')}</div><div class="bar-track"><div class="bar-fill bar-ot" style="width:${op}%"></div><div class="bar-fill bar-comp" style="width:${cp}%;position:absolute;top:0;left:0;opacity:.7"></div></div><div class="bar-value">${ot?fmt(ot):'—'}</div></div>`;
+  }).join('');
+
+  if(!mr.length&&!mc.length) { document.getElementById('personDetailTable').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>この月の記録がありません。</p></div>'; return; }
+  const rows=[];
+  mr.forEach(r=>{
+    const net2=Number(r.otMinutes)-Number(r.compMinutes);
+    rows.push({date:r.date,html:`<tr>
+      <td class="td-date">${r.date}</td><td><span class="badge badge-ot">${r.type}</span></td>
+      <td class="td-mono">${r.otStart}〜${r.otEnd}</td>
+      <td class="td-mono" style="color:var(--red)">${fmt(r.otMinutes)}</td>
+      <td>${r.hasComp?`<span class="badge badge-comp">${r.compDate||''} ${fmt(r.compMinutes)}</span>`:'—'}</td>
+      <td>${net2>0?`<span class="badge badge-net-pos">+${fmt(net2)}</span>`:`<span class="badge badge-net-zero">±0</span>`}</td>
+      <td style="max-width:200px;font-size:12px;color:var(--ink-mid)">${r.reason}</td>
+      <td style="white-space:nowrap"><button class="btn-icon edit" onclick="openEditOTModal('${r.id}')" title="編集">✏️</button></td>
+    </tr>`});
+  });
+  mc.forEach(r=>{
+    rows.push({date:r.date,html:`<tr style="background:rgba(184,150,12,0.04)">
+      <td class="td-date">${r.date}</td><td><span class="badge badge-comp-sa">振替取得</span></td>
+      <td class="td-mono">${r.start}〜${r.end}</td>
+      <td style="color:var(--ink-soft);font-size:12px">—</td>
+      <td class="td-mono" style="color:var(--gold)">${fmt(r.minutes)}</td>
+      <td><span class="badge badge-net-zero">取得済</span></td>
+      <td style="max-width:200px;font-size:12px;color:var(--ink-mid)">${r.reason||'—'}</td>
+      <td style="white-space:nowrap"><button class="btn-icon edit" onclick="openEditCompModal('${r.id}')" title="編集">✏️</button></td>
+    </tr>`});
+  });
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('personDetailTable').innerHTML=`<table><thead><tr><th>日付</th><th>種別</th><th>時間帯</th><th>残業時間</th><th>振替取得</th><th>差引</th><th>理由・備考</th><th></th></tr></thead><tbody>${rows.map(r=>r.html).join('')}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════
+function loadSettingsForm() {
+  const s=state.settings;
+  document.getElementById('s_warn').value=s.warn;
+  document.getElementById('s_danger').value=s.danger;
+  document.getElementById('s_special').value=s.special;
+  document.getElementById('s_year_warn').value=s.yearWarn;
+  document.getElementById('s_year_danger').value=s.yearDanger;
+}
+
+async function saveSettings() {
+  state.settings={
+    warn:parseInt(document.getElementById('s_warn').value)||36,
+    danger:parseInt(document.getElementById('s_danger').value)||45,
+    special:parseInt(document.getElementById('s_special').value)||80,
+    yearWarn:parseInt(document.getElementById('s_year_warn').value)||300,
+    yearDanger:parseInt(document.getElementById('s_year_danger').value)||360,
+  };
+  showLoading(true); setSyncStatus('syncing');
+  try {
+    const res = await gasPost({ action:'saveSettings', data:state.settings });
+    if(!res.ok) throw new Error(res.error);
+    setSyncStatus('synced');
+    alert('設定を保存しました。');
+  } catch(e) { setSyncStatus('error'); alert('保存に失敗しました: '+e.message); }
+  finally { showLoading(false); }
+}
+
+// ══════════════════════════════════════════════════
+//  CSV EXPORT
+// ══════════════════════════════════════════════════
+function exportCSV(type) {
+  const [y,m]=state.month.split('-').map(Number);
+  let rows=[], filename='';
+  if(type==='ot') {
+    const empId=document.getElementById('inputEmp').value;
+    if(!empId){alert('社員を選択してください。');return;}
+    const emp=state.employees.find(e=>e.id===empId);
+    filename=`残業記録_${emp?.name||empId}_${y}${String(m).padStart(2,'0')}.csv`;
+    rows.push(['社員名','部署','残業日','種別','残業開始','残業終了','残業時間(分)','残業時間','振替取得日','振替開始','振替終了','振替時間(分)','振替時間','差引残業(分)','差引残業','残業理由']);
+    monthRecs(state.records,empId,state.month).sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+      const net=Math.max(Number(r.otMinutes)-Number(r.compMinutes),0);
+      rows.push([emp?.name||'',emp?.dept||'',r.date,r.type,r.otStart,r.otEnd,r.otMinutes,fmt(r.otMinutes),r.compDate||'',r.compStart||'',r.compEnd||'',r.compMinutes,fmt(r.compMinutes),net,fmt(net),r.reason]);
+    });
+    monthCompRecs(empId,state.month).forEach(r=>{ rows.push([emp?.name||'',emp?.dept||'',r.date,'振替取得','','',0,'',r.date,r.start,r.end,r.minutes,fmt(r.minutes),0,'',r.reason||'']); });
+  } else if(type==='comp') {
+    const empId=document.getElementById('compInputEmp').value;
+    if(!empId){alert('社員を選択してください。');return;}
+    const emp=state.employees.find(e=>e.id===empId);
+    filename=`振替記録_${emp?.name||empId}_${y}${String(m).padStart(2,'0')}.csv`;
+    rows.push(['社員名','部署','振替取得日','開始時間','終了時間','取得時間(分)','取得時間','理由・備考']);
+    monthCompRecs(empId,state.month).sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{ rows.push([emp?.name||'',emp?.dept||'',r.date,r.start,r.end,r.minutes,fmt(r.minutes),r.reason||'']); });
+  } else if(type==='person') {
+    const empId=state.selectedPersonTab;
+    if(!empId){alert('社員タブを選択してください。');return;}
+    const emp=state.employees.find(e=>e.id===empId);
+    filename=`個人残業集計_${emp?.name||empId}_${y}${String(m).padStart(2,'0')}.csv`;
+    rows.push(['社員名','部署','残業日','種別','残業時間帯','残業時間(分)','残業時間','振替取得日','振替時間(分)','振替時間','差引残業(分)','差引残業','残業理由']);
+    const recs=monthRecs(state.records,empId,state.month).sort((a,b)=>a.date.localeCompare(b.date));
+    recs.forEach(r=>{ const net=Math.max(Number(r.otMinutes)-Number(r.compMinutes),0); rows.push([emp?.name||'',emp?.dept||'',r.date,r.type,`${r.otStart}〜${r.otEnd}`,r.otMinutes,fmt(r.otMinutes),r.compDate||'',r.compMinutes,fmt(r.compMinutes),net,fmt(net),r.reason]); });
+    monthCompRecs(empId,state.month).forEach(r=>{ rows.push([emp?.name||'',emp?.dept||'',r.date,'振替取得',`${r.start}〜${r.end}`,0,'',r.date,r.minutes,fmt(r.minutes),0,'',r.reason||'']); });
+    const totOT=recs.reduce((s,r)=>s+Number(r.otMinutes),0);
+    const totComp=recs.reduce((s,r)=>s+Number(r.compMinutes),0)+monthCompRecs(empId,state.month).reduce((s,r)=>s+Number(r.minutes),0);
+    const totNet=Math.max(totOT-totComp,0);
+    rows.push([]); rows.push(['【月合計】','','','','',totOT,fmt(totOT),'',totComp,fmt(totComp),totNet,fmt(totNet),'']);
+  } else if(type==='all') {
+    filename=`全体残業集計_${y}${String(m).padStart(2,'0')}.csv`;
+    rows.push(['社員名','部署','役職','残業件数','残業時間(分)','残業時間','振替取得(分)','振替取得','実質残業(分)','実質残業']);
+    const mr=state.records.filter(r=>{ const d=new Date(r.date); return d.getFullYear()===y&&d.getMonth()+1===m; });
+    const mc=state.compRecords.filter(r=>{ const d=new Date(r.date); return d.getFullYear()===y&&d.getMonth()+1===m; });
+    state.employees.forEach(e=>{
+      const er=mr.filter(r=>r.empId===e.id);
+      const ot=er.reduce((s,r)=>s+Number(r.otMinutes),0);
+      const comp=er.reduce((s,r)=>s+Number(r.compMinutes),0)+mc.filter(r=>r.empId===e.id).reduce((s,r)=>s+Number(r.minutes),0);
+      const net=Math.max(ot-comp,0);
+      rows.push([e.name,e.dept,e.role||'',er.length,ot,fmt(ot),comp,fmt(comp),net,fmt(net)]);
+    });
+    const data=rows.slice(1);
+    rows.push([]); rows.push(['【合計】','','','',data.reduce((s,r)=>s+(r[4]||0),0),fmt(data.reduce((s,r)=>s+(r[4]||0),0)),data.reduce((s,r)=>s+(r[6]||0),0),fmt(data.reduce((s,r)=>s+(r[6]||0),0)),data.reduce((s,r)=>s+(r[8]||0),0),fmt(data.reduce((s,r)=>s+(r[8]||0),0))]);
+  }
+  const bom='\uFEFF';
+  const csv=bom+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+function monthRecs(recs,empId,ymStr) {
+  const [y,m]=ymStr.split('-').map(Number);
+  return recs.filter(r=>{ if(r.empId!==empId) return false; const d=new Date(r.date); return d.getFullYear()===y&&d.getMonth()+1===m; });
+}
+function monthCompRecs(empId,ymStr) {
+  const [y,m]=ymStr.split('-').map(Number);
+  return state.compRecords.filter(r=>{ if(r.empId!==empId) return false; const d=new Date(r.date); return d.getFullYear()===y&&d.getMonth()+1===m; });
+}
+function getTotalOT(empId,ymStr) { return monthRecs(state.records,empId,ymStr).reduce((s,r)=>s+Number(r.otMinutes),0); }
+function getNetOT(empId,ymStr) {
+  const ot=getTotalOT(empId,ymStr);
+  const comp=monthRecs(state.records,empId,ymStr).reduce((s,r)=>s+Number(r.compMinutes),0)+monthCompRecs(empId,ymStr).reduce((s,r)=>s+Number(r.minutes),0);
+  return Math.max(ot-comp,0);
+}
+function mins(s,e) {
+  if(!s||!e) return 0;
+  const [sh,sm]=s.split(':').map(Number), [eh,em]=e.split(':').map(Number);
+  const d=(eh*60+em)-(sh*60+sm); return d>0?d:0;
+}
+function hl(s,e) { const m=mins(s,e); if(!m) return '—'; return `${Math.floor(m/60)}h${m%60>0?String(m%60).padStart(2,'0')+'m':''}`; }
+function fmt(min) { if(!min) return '0h'; const h=Math.floor(min/60),m=min%60; return m?`${h}h${String(m).padStart(2,'0')}m`:`${h}h`; }
+function fmtS(min) { if(!min) return '0'; const h=Math.floor(min/60),m=min%60; return m?`${h}.${Math.round(m/60*10)}`:String(h); }
+
+init();
+</script>
+</body>
+</html>
